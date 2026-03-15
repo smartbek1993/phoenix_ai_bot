@@ -5,9 +5,9 @@ from flask import Flask
 import threading
 import os
 
-BOT_TOKEN = "8748789297:AAHI6HyBxBIP3JEZ5Y1Yc-Q8iuCgPzv1tPo"
+BOT_TOKEN = os.getenv"8748789297:AAHI6HyBxBIP3JEZ5Y1Yc-Q8iuCgPzv1tPo"
 ADMIN_ID = 123456789
-GROQ_API_KEY = "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"
+GROQ_API_KEY = os.getenv"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"
 
 bot = telebot.TeleBot("8748789297:AAHI6HyBxBIP3JEZ5Y1Yc-Q8iuCgPzv1tPo")
 client = Groq(api_key="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")
