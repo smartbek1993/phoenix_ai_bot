@@ -1,4 +1,4 @@
-pyTelegramBotAPI==4.23.0
-flask==3.0.0
+pyTelegramBotAPI
 groq
+flask
 requests
