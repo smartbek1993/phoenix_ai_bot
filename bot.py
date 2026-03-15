@@ -5,19 +5,21 @@ from flask import Flask
 import threading
 import os
 
-BOT_TOKEN = os.getenv"8748789297:AAHI6HyBxBIP3JEZ5Y1Yc-Q8iuCgPzv1tPo"
+# ENV VARIABLES
+BOT_TOKEN = os.getenv("8748789297:AAHPaVO3hRVQkbNk4220CL2xzembX8SOCbU")
+GROQ_API_KEY = os.getenv("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")
+
 ADMIN_ID = 123456789
-GROQ_API_KEY = os.getenv"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"
 
-bot = telebot.TeleBot("8748789297:AAHI6HyBxBIP3JEZ5Y1Yc-Q8iuCgPzv1tPo")
-client = Groq(api_key="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")
+bot = telebot.TeleBot(8748789297:AAHPaVO3hRVQkbNk4220CL2xzembX8SOCbU)
+client = Groq(api_key=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)
 
+# FLASK
 app = Flask(__name__)
 
 @app.route('/')
 def home():
     return "Bot ishlayapti!"
-
 
 # START
 @bot.message_handler(commands=['start'])
@@ -41,7 +43,6 @@ def start(message):
         reply_markup=markup
     )
 
-
 # KURSLAR
 @bot.message_handler(func=lambda m: m.text == "📚 Kurslar")
 def courses(message):
@@ -58,7 +59,6 @@ IELTS tayyorlov
 
     bot.send_message(message.chat.id, text)
 
-
 # NARXLAR
 @bot.message_handler(func=lambda m: m.text == "💰 Narxlar")
 def prices(message):
@@ -73,7 +73,6 @@ Kurs narxlari:
 
     bot.send_message(message.chat.id, text)
 
-
 # MANZIL
 @bot.message_handler(func=lambda m: m.text == "📍 Manzil")
 def location(message):
@@ -82,7 +81,6 @@ def location(message):
         message.chat.id,
         "Manzil: Toshkent shahri\nMo'ljal: Metro yaqinida"
     )
-
 
 # REGISTRATION
 @bot.message_handler(func=lambda m: m.text == "📝 Ro‘yxatdan o‘tish")
@@ -102,7 +100,6 @@ def register(message):
         "Telefon raqamingizni yuboring.",
         reply_markup=markup
     )
-
 
 # CONTACT
 @bot.message_handler(content_types=['contact'])
@@ -127,7 +124,6 @@ Telefon: {phone}
         "Rahmat! Tez orada siz bilan bog‘lanamiz."
     )
 
-
 # AI CHAT
 @bot.message_handler(func=lambda message: True)
 def ai_chat(message):
@@ -139,16 +135,20 @@ def ai_chat(message):
             messages=[
                 {
                     "role": "system",
-                    "content": "Sen ingliz tili o‘quv markazi menejerisan. Har bir savolga juda qisqa javob ber va foydalanuvchini kursga yozilishga taklif qil."
+                    "content": "Sen ingliz tili markazi menejerisan. Savollarga juda qisqa (1-2 gap) javob ber."
                 },
                 {
                     "role": "user",
                     "content": message.text
                 }
-            ]
+            ],
+            max_tokens=60
         )
 
         answer = chat.choices[0].message.content
+
+        # maksimal 2 qator
+        answer = "\n".join(answer.split("\n")[:2])
 
         bot.send_message(message.chat.id, answer)
 
@@ -161,18 +161,14 @@ def ai_chat(message):
             "Kechirasiz, hozir javob berolmayapman."
         )
 
-
 print("Bot ishlayapti...")
 
-
-# FLASK SERVER THREAD
+# FLASK SERVER
 def run_flask():
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
 
-
 threading.Thread(target=run_flask).start()
-
 
 # BOT START
 bot.infinity_polling()
