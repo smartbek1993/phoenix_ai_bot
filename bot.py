@@ -1,174 +1,124 @@
 import telebot
-from telebot import types
-from groq import Groq
-from flask import Flask
-import threading
+import requests
 import os
 
-# ENV VARIABLES
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-ADMIN_ID = 123456789
-
 bot = telebot.TeleBot(BOT_TOKEN)
-client = Groq(api_key=GROQ_API_KEY)
 
-# FLASK
-app = Flask(__name__)
-
-@app.route('/')
-def home():
-    return "Bot ishlayapti!"
+# MENU
+def menu():
+    markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
+    markup.row("📚 Kurslar", "💰 Narxlar")
+    markup.row("📍 Manzil", "📝 Ro'yxatdan o'tish")
+    markup.row("🤖 Savol berish")
+    return markup
 
 # START
 @bot.message_handler(commands=['start'])
-def start(message):
-
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-
-    btn1 = types.KeyboardButton("📚 Kurslar")
-    btn2 = types.KeyboardButton("💰 Narxlar")
-    btn3 = types.KeyboardButton("📍 Manzil")
-    btn4 = types.KeyboardButton("📝 Ro‘yxatdan o‘tish")
-    btn5 = types.KeyboardButton("🤖 Savol berish")
-
-    markup.add(btn1, btn2)
-    markup.add(btn3, btn4)
-    markup.add(btn5)
-
+def start(msg):
     bot.send_message(
-        message.chat.id,
-        "Assalomu alaykum!\nKerakli bo‘limni tanlang yoki savol yozing.",
-        reply_markup=markup
+        msg.chat.id,
+        "Assalomu alaykum!\nKerakli bo'limni tanlang yoki savol yozing.",
+        reply_markup=menu()
     )
 
 # KURSLAR
 @bot.message_handler(func=lambda m: m.text == "📚 Kurslar")
-def courses(message):
-
+def kurslar(msg):
     text = """
-Bizda quyidagi kurslar mavjud:
+📚 Ingliz tili kurslari
 
-Beginner
-Elementary
-Pre-Intermediate
-Intermediate
-IELTS tayyorlov
+1️⃣ Beginner
+2️⃣ Intermediate
+3️⃣ Advanced
+
+Davomiyligi: 3 oy
 """
-
-    bot.send_message(message.chat.id, text)
+    bot.send_message(msg.chat.id, text)
 
 # NARXLAR
 @bot.message_handler(func=lambda m: m.text == "💰 Narxlar")
-def prices(message):
-
+def narx(msg):
     text = """
-Kurs narxlari:
+💰 Kurs narxi
 
-1 oy: 500 000 so'm
-3 oy: 1 400 000 so'm
-6 oy: 2 600 000 so'm
+3 oy: 400 000 so'm
 """
-
-    bot.send_message(message.chat.id, text)
+    bot.send_message(msg.chat.id, text)
 
 # MANZIL
 @bot.message_handler(func=lambda m: m.text == "📍 Manzil")
-def location(message):
-
+def manzil(msg):
     bot.send_message(
-        message.chat.id,
-        "Manzil: Toshkent shahri\nMo'ljal: Metro yaqinida"
+        msg.chat.id,
+        "📍 Toshkent shahri\nMo'ljal: Metro yaqinida"
     )
 
-# REGISTRATION
-@bot.message_handler(func=lambda m: m.text == "📝 Ro‘yxatdan o‘tish")
-def register(message):
-
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-
-    btn = types.KeyboardButton(
-        "📱 Telefonni yuborish",
+# RO'YXATDAN O'TISH
+@bot.message_handler(func=lambda m: m.text == "📝 Ro'yxatdan o'tish")
+def register(msg):
+    markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
+    btn = telebot.types.KeyboardButton(
+        "📞 Telefon yuborish",
         request_contact=True
     )
-
     markup.add(btn)
 
     bot.send_message(
-        message.chat.id,
-        "Telefon raqamingizni yuboring.",
+        msg.chat.id,
+        "Telefon raqamingizni yuboring",
         reply_markup=markup
     )
 
-# CONTACT
+# TELEFON QABUL
 @bot.message_handler(content_types=['contact'])
-def contact(message):
-
-    phone = message.contact.phone_number
-    name = message.from_user.first_name
-    username = message.from_user.username
-
-    text = f"""
-🔥 Yangi mijoz
-
-Ism: {name}
-Username: @{username}
-Telefon: {phone}
-"""
-
-    bot.send_message(ADMIN_ID, text)
+def contact(msg):
+    phone = msg.contact.phone_number
 
     bot.send_message(
-        message.chat.id,
-        "Rahmat! Tez orada siz bilan bog‘lanamiz."
+        msg.chat.id,
+        f"Rahmat!\nAdmin siz bilan bog'lanadi.\nTelefon: {phone}",
+        reply_markup=menu()
     )
 
-# AI CHAT
-@bot.message_handler(func=lambda message: True)
-def ai_chat(message):
+# AI JAVOB
+def ai(text):
 
+    url = "https://api.groq.com/openai/v1/chat/completions"
+
+    headers = {
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    data = {
+        "model": "llama3-70b-8192",
+        "messages": [
+            {
+                "role": "system",
+                "content": "You are a helpful assistant. Answer briefly."
+            },
+            {
+                "role": "user",
+                "content": text
+            }
+        ]
+    }
+
+    r = requests.post(url, headers=headers, json=data)
+
+    return r.json()["choices"][0]["message"]["content"]
+
+# SAVOL
+@bot.message_handler(func=lambda m: True)
+def chat(msg):
     try:
+        answer = ai(msg.text)
+        bot.send_message(msg.chat.id, answer)
+    except:
+        bot.send_message(msg.chat.id, "AI javob bera olmadi.")
 
-        chat = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "Sen ingliz tili markazi menejerisan. Savollarga juda qisqa (1-2 gap) javob ber."
-                },
-                {
-                    "role": "user",
-                    "content": message.text
-                }
-            ],
-            max_tokens=60
-        )
-
-        answer = chat.choices[0].message.content
-
-        # maksimal 2 qator
-        answer = "\n".join(answer.split("\n")[:2])
-
-        bot.send_message(message.chat.id, answer)
-
-    except Exception as e:
-
-        print(e)
-
-        bot.send_message(
-            message.chat.id,
-            "Kechirasiz, hozir javob berolmayapman."
-        )
-
-print("Bot ishlayapti...")
-
-# FLASK SERVER
-def run_flask():
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
-
-threading.Thread(target=run_flask).start()
-
-# BOT START
 bot.infinity_polling()
+
