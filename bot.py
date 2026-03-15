@@ -6,13 +6,13 @@ import threading
 import os
 
 # ENV VARIABLES
-BOT_TOKEN = os.getenv("8748789297:AAHPaVO3hRVQkbNk4220CL2xzembX8SOCbU")
-GROQ_API_KEY = os.getenv("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")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 ADMIN_ID = 123456789
 
-bot = telebot.TeleBot(8748789297:AAHPaVO3hRVQkbNk4220CL2xzembX8SOCbU)
-client = Groq(api_key=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)
+bot = telebot.TeleBot(BOT_TOKEN)
+client = Groq(api_key=GROQ_API_KEY)
 
 # FLASK
 app = Flask(__name__)
