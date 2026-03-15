@@ -5,12 +5,12 @@ from flask import Flask
 import threading
 import os
 
-BOT_TOKEN = "8748789297:AAFuGwoFAmrXx8nkfDz6b9ZxmojiWmQaDVo"
+BOT_TOKEN = "8748789297:AAHI6HyBxBIP3JEZ5Y1Yc-Q8iuCgPzv1tPo"
 ADMIN_ID = 123456789
-GROQ_API_KEY = "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"
+GROQ_API_KEY = "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"
 
-bot = telebot.TeleBot("8748789297:AAFuGwoFAmrXx8nkfDz6b9ZxmojiWmQaDVo")
-client = Groq(api_key="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")
+bot = telebot.TeleBot("8748789297:AAHI6HyBxBIP3JEZ5Y1Yc-Q8iuCgPzv1tPo")
+client = Groq(api_key="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")
 
 app = Flask(__name__)
 
@@ -139,7 +139,7 @@ def ai_chat(message):
             messages=[
                 {
                     "role": "system",
-                    "content": "Sen ingliz tili o‘quv markazi menejerisan. Har bir savolga juda qisqa (2-3 gap) javob ber. Javob oxirida foydalanuvchini kursga yozilishga taklif qil."
+                    "content": "Sen ingliz tili o‘quv markazi menejerisan. Har bir savolga juda qisqa javob ber va foydalanuvchini kursga yozilishga taklif qil."
                 },
                 {
                     "role": "user",
@@ -165,13 +165,14 @@ def ai_chat(message):
 print("Bot ishlayapti...")
 
 
-# BOTNI ISHGA TUSHIRISH
-def run_bot():
-    bot.infinity_polling()
+# FLASK SERVER THREAD
+def run_flask():
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
 
-threading.Thread(target=run_bot).start()
+
+threading.Thread(target=run_flask).start()
 
 
-# FLASK SERVER (Render uchun port ochadi)
-port = int(os.environ.get("PORT", 10000))
-app.run(host="0.0.0.0", port=port)
+# BOT START
+bot.infinity_polling()
