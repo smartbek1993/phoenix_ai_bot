@@ -1,4 +1,2 @@
 pyTelegramBotAPI
-groq
-flask
 requests
